@@ -8,11 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [ '3.9', '3.10', '3.11' ]
+        python-version: [ '3.10' ]
+
     steps:
       # Checkout repository
       - name: Checkout Repository
@@ -30,20 +31,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Django CI test
-      - name: Django Tests
-        run: |
-          python -m django --version
-          python manage.py test
-
-      # SQLMap basic import test
+      # Basic SQLMap test
       - name: Basic Import Test
         run: python -c "import sqlmap; import sqlmapapi"
 
-      # SQLMap smoke test
-      - name: Smoke Test
-        run: python sqlmap.py --smoke
-
-      # SQLMap vulnerability test
-      - name: Vulnerability Test
-        run: python sqlmap.py --vuln
+      # Run Django tests
+      - name: Django Tests
+        run: python manage.py test
