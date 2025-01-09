@@ -1,0 +1,65 @@
+name: SQLMap Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [ '3.11', 'pypy-2.7', 'pypy-3.7' ]
+    steps:
+      # Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      # Cache dependencies
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Linting (optional)
+      - name: Run Linter (flake8)
+        run: |
+          pip install flake8
+          flake8 .
+
+      # Basic import test
+      - name: Basic Import Test
+        run: python -c "import sqlmap; import sqlmapapi"
+
+      # Smoke test
+      - name: Smoke Test
+        run: python sqlmap.py --smoke
+
+      # Vulnerability test
+      - name: Vulnerability Test
+        run: python sqlmap.py --vuln
+
+      # Upload test results (optional)
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: path/to/results
